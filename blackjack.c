@@ -20,109 +20,66 @@
     //perguntar se quer jogar de novo
     //se não quiser jogar de novo, free malloc
 
-//cria um deck
-//retorna array de struct Cards
-Cards* create_deck() {
-    int i, j, k;
-    
-    Cards *deck = (Cards *)malloc(DECK_SIZE * sizeof(Cards));
-
-    if (deck == NULL) {
-        return NULL;
-    }
-
-    char* cards[] = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
-    int values[] = {11, 2, 3, 4, 5,  6, 7, 8, 9, 10, 10, 10, 10};
-    int index;
-
-    for (i = 0; i < DECK_COUNT; i++) {              //diferentes baralhos
-        for (j = 0; j < 13; j++) {                  //diferentes valores de cartas
-            for (k = 0; k < 4; k++) {               //diferentes nipes
-                index = (i * 52) + (j * 4) + k;
-                deck[index].card = cards[j];
-                deck[index].value = values[j];
-            }
-        }
-    }
-
-    deck = shuffle(deck);                           //embaralha o deck
-
-    return deck;
-}
-
-//cria mão para jogar
-//retorna array de Cards
-Cards* create_hand() {
-    Cards* hand = (Cards *)malloc(MAX_HAND * sizeof(Cards));
-
-    if (hand == NULL ) {
-        return NULL;
-    }
-
-    return hand;
-}
-
-//embaralha o deck
-//retorna array de struct cards
-//utiliza algoritmo Fisher-Yates de shuffle
-Cards* shuffle(Cards* deck) {
-    if (deck == NULL) {
-        return NULL;
-    }
-
-    for (int i = DECK_SIZE - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
-
-        Cards temp = deck[i];
-        deck[i] = deck[j];
-        deck[j] = temp;
-    }
-
-    return deck;
+//compra carta
+//ajusta em ponteiro a mao e a contagem
+void draw (int* hand, int* hand_index) {
+    int card = (rand() % 13) + 1;                         //em cassinos é padrão 6 baralhos, entao não tem problema se vier até 24 cartas de mesmo valor, logo não há problema com esse método mesmo gerando repetidas cartas
+    hand[*hand_index] = card;                             //1, 11, 12, 13, representam A, J, Q, K, respectivamente
+    *hand_index += 1;
 }
 
 //calcula valor da mão
-int hand_score(Cards* hand, int count) {
+int hand_score(int* hand, int* count) {
     int score = 0;
-    int aces = 0;
+    int aces = 0;                               //guarda quantos aces na mao para acalcular se A vale 1 ou 11
+    int card;                                   //variavel temporaria pra guardar carta sendo iterada
 
-    for (int i = 0; i < count; i++) {
-        score += hand[i].value;
-        if (hand[i].value == 11) {
+    for (int i = 0; i < *count; i++) {
+        card = hand[i];
+        if (card > 10) {                        //se for J, Q, K, valor = 10
+            card = 10;
+        }
+
+        score += card;
+
+        if (card == 1) {
             aces++;
         }
     }
 
-    while (score > 21 && aces > 0) {
-        score -= 10;
+    while (score <= 11 && aces > 0) {           //muda valor de Ais para 11 se possivel
+        score += 10;
         aces --;
     }
 
     return score;
 }
 
-//compra carta
-//ajusta em ponteiro contagem de cartas das maos e do deck
-void draw (Cards* deck, Cards* hand, int* hand_index, int* deck_index) {
-    hand[*hand_index] = deck[*deck_index];
-    *hand_index += 1;
-    *deck_index += 1;
+//printa carta
+void print_card (int card) {
+    if (card == 1) {
+        printf ("A ");
+    }
+    else if (card == 11) {
+        printf ("J ");
+    }
+    else if (card == 12) {
+        printf ("Q ");
+    }
+    else if (card == 13) {
+        printf ("K ");
+    }
+    else {
+        printf ("%d ", card);
+    }
 }
 
-
-//printa informações para o player
-void print (Cards* player, Cards* dealer, int* pcount) {
-    printf ("Carta do Dealer: ");                           //printa carta do dealer
-    printf ("%s ", dealer[0].card);
-    printf ("\n");
-
-    printf ("Suas Cartas: ");                               //printa cartas do player
-    for (int i = 0; i < *pcount; i++) {
-        printf ("%s ", player[i].card);
+//printa só a mão
+void print_hand (int* hand, int* count) {
+    for (int i = 0; i < *count; i++) {
+        print_card (hand[i]);
     }
     printf ("\n");
-
-
 }
 
 //verifica se hand tem natural blackjack
@@ -139,41 +96,89 @@ int natural_blackjack (Cards* hand, int count) {
 }*/
 
 //começa o jogo
-void start_game() {
-    Cards* deck = create_deck();                            //cria o deck
-    Cards* player_hand = create_hand();                     //inicializa mao de jogador
-    Cards* dealer_hand = create_hand();                     //incializa mao do dealer
-    int* player_card_count = (int *)malloc(sizeof(int));                      
-    int* dealer_card_count = (int *)malloc(sizeof(int));
-    int* index_deck = (int *)malloc(sizeof(int));           //onde esta o baralho, index_deck ++ é igual a comprar uma carta]
+//retorna 0 se perdeu e 1 se ganhou
+int start_game() {
+    int* player_hand = (int *)malloc(MAX_HAND * sizeof(int));                       //inicializa mao de jogador
+    int* dealer_hand = (int *)malloc(MAX_HAND * sizeof(int));                       //incializa mao do dealer
+    int* player_card_count = (int *)malloc(sizeof(int));                            //contagem cartas player
+    int* dealer_card_count = (int *)malloc(sizeof(int));                            //contagem cartas dealer
+    int player_score = 0;                                                           //score da mao do player
+    int dealer_score = 0;                                                           //score da mao do dealer
     *player_card_count = 0;
     *dealer_card_count = 0;
-    *index_deck = 0;
+    char player_action = 0;                                     //variavel vai ser usada para checar se player vai comprar carta ou nao
 
     //começo da rodada
-    draw (deck, player_hand, player_card_count, index_deck);
-    draw (deck, dealer_hand, dealer_card_count, index_deck);
-    draw (deck, player_hand, player_card_count, index_deck);
-    draw (deck, dealer_hand, dealer_card_count, index_deck);
+    draw (player_hand, player_card_count);
+    draw (dealer_hand, dealer_card_count);
+    draw (player_hand, player_card_count);
+    draw (dealer_hand, dealer_card_count);
 
-    /*while () {
-        print (player_hand, dealer_hand, player_card_count);
+    //vez do player
+    while (player_action != 'n') {
+        printf ("Carta do Dealer: %d\n", dealer_hand[0]);                                //printa carta do dealer que fica a mostra
+        printf ("Suas cartas: ");
+        print_hand(player_hand, player_card_count);                                                 //printa cartas do player
         printf ("Comprar carta? [s][n]\n");
-        char player_action = 0;                                
-        while (player_action != 's' || player_action != 'n') {
-            scanf ("%c", &player_action);                           //perguntar ação ao player em loop, apenas 's' ou 'n'
+
+        player_action = 0;                                                          //redefine a variavel para que nao fique salvo o "s" e quebre o prox while
+
+        while (player_action != 's' && player_action != 'n') {
+            scanf (" %c", &player_action);                                          //perguntar ação ao player em loop, apenas 's' ou 'n'
+        }                                                                           
+
+        if (player_action == 's') {                                                 //se player comprar carta
+            draw (player_hand, player_card_count);
+            printf ("Você comprou: ");                                              //printa qual carta ele comprou
+            print_card (player_hand[*player_card_count - 1]);
         }
 
-        if (player_action == 's') {
+        player_score = hand_score (player_hand, player_card_count);
 
+        if (player_score > 21) {                                                    //verifica se player estourou 21 pontos
+            printf ("Você estourou 21 pontos.\nVocê perdeu. :(\n");
+            return 0;
         }
-    }*/
+    }
 
-    free (deck);
+    //vez do dealer
+    dealer_score = hand_score (dealer_hand, dealer_card_count);
+
+    while (dealer_score < 17) {                                                     //vez do dealer, regra diz que dealer joga até 17 pontos
+        printf ("Cartas do Dealer: ");
+        print_hand (dealer_hand, dealer_card_count);
+        
+        draw (dealer_hand, dealer_card_count);                                      //compra carta
+
+        printf ("Dealer comprou: ");
+        print_card (dealer_hand[*dealer_card_count - 1]);                           //printa carta comprada
+        printf ("\n");
+
+        dealer_score = hand_score (dealer_hand, dealer_card_count);                 
+
+        if (dealer_score > 21) {
+            printf ("Dealer estourou 21 pontos.\nVocê ganhou! :)\n");               //verifica se dealer estourou 21 pontos      
+            return 1;
+        }
+    }
+
+    //comparacao final
+    printf ("Cartas do Dealer: ");                                  //printa as duas maos
+    print_hand (dealer_hand, dealer_card_count);
+    printf ("Suas cartas: ");
+    print_hand (player_hand, player_card_count);
+
+    if (player_score > dealer_score) {
+        printf ("Você ganhou! :)\n");
+        return 1;
+    }
+    else if (player_score < dealer_score) {
+        printf ("Você perdeu.\n");
+        return 0;
+    }
+
     free (player_hand);
     free (dealer_hand);
     free (player_card_count);
     free (dealer_card_count);
-    free (index_deck);
-
 }

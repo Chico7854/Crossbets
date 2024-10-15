@@ -156,7 +156,7 @@ void start_game() {
     draw (deck, player_hand, player_card_count, index_deck);
     draw (deck, dealer_hand, dealer_card_count, index_deck);
 
-    while () {
+    /*while () {
         print (player_hand, dealer_hand, player_card_count);
         printf ("Comprar carta? [s][n]\n");
         char player_action = 0;                                
@@ -167,7 +167,7 @@ void start_game() {
         if (player_action == 's') {
 
         }
-    }
+    }*/
 
     free (deck);
     free (player_hand);

@@ -96,7 +96,7 @@ int natural_blackjack (Cards* hand, int count) {
 }*/
 
 //começa o jogo
-//retorna 0 se perdeu e 1 se ganhou
+//retorna o quanto a bet deve ser multiplicada pra entrar no saldo
 int start_game() {
     int* player_hand = (int *)malloc(MAX_HAND * sizeof(int));                       //inicializa mao de jogador
     int* dealer_hand = (int *)malloc(MAX_HAND * sizeof(int));                       //incializa mao do dealer
@@ -131,13 +131,14 @@ int start_game() {
             draw (player_hand, player_card_count);
             printf ("Você comprou: ");                                              //printa qual carta ele comprou
             print_card (player_hand[*player_card_count - 1]);
+            printf ("\n");
         }
 
         player_score = hand_score (player_hand, player_card_count);
 
         if (player_score > 21) {                                                    //verifica se player estourou 21 pontos
             printf ("Você estourou 21 pontos.\nVocê perdeu. :(\n");
-            return 0;
+            return -1;
         }
     }
 
@@ -168,13 +169,17 @@ int start_game() {
     printf ("Suas cartas: ");
     print_hand (player_hand, player_card_count);
 
-    if (player_score > dealer_score) {
+    if (player_score > dealer_score) {                              //se player ganha
         printf ("Você ganhou! :)\n");
         return 1;
     }
-    else if (player_score < dealer_score) {
+    else if (player_score < dealer_score) {                         //se player perde
         printf ("Você perdeu.\n");
-        return 0;
+        return -1;
+    }       
+    else {                                                          //se player empata
+        printf ("Você empatou.\n");
+        return 0;                                               
     }
 
     free (player_hand);

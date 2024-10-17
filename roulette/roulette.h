@@ -1,12 +1,7 @@
 #ifndef _ROULETTE_
 #define _ROULETTE_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
+#include "commom.h"
 
 #define MAX_BETS 46     //numero máximo de aposta
 

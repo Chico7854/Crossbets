@@ -3,42 +3,21 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: Build Blackjack",
-            "command": "/usr/bin/gcc-11",
-            "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${workspaceFolder}/blackjack/blackjack.c",
-                "${workspaceFolder}/blackjack/main.c",
-                "-o",
-                "${workspaceFolder}/blackjack/blackjack"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/blackjack"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "detail": "Task to build blackjack."
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: Build Roulette",
+            "label": "C/C++: Build Cassino",
             "command": "/usr/bin/gcc-11",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
                 "${workspaceFolder}/roulette/roulette.c",
-                "${workspaceFolder}/roulette/main.c",
+                "${workspaceFolder}/blackjack/blackjack.c",
+                "${workspaceFolder}/baccarat/baccarat.c",
+                "${workspaceFolder}/common.c",
+                "${workspaceFolder}/main.c",
                 "-o",
-                "${workspaceFolder}/roulette/roleta"
+                "${workspaceFolder}/cassino"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/roulette"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [
                 "$gcc"
@@ -47,7 +26,7 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Task to build roulette."
+            "detail": "Task to build cassino."
         }
     ]
 }

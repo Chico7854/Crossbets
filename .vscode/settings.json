@@ -2,6 +2,8 @@
     "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
         "blackjack.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "baccarat.h": "c",
+        "common.h": "c"
     }
 }

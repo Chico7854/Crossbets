@@ -4,18 +4,10 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Blackjack",
-            "program": "${workspaceFolder}/blackjack/blackjack",
+            "name": "Debug Cassino",
+            "program": "${workspaceFolder}",
             "args": [],
-            "cwd": "${workspaceFolder}/blackjack"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug Roulette",
-            "program": "${workspaceFolder}/roulette/roleta",
-            "args": [],
-            "cwd": "${workspaceFolder}/roulette"
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

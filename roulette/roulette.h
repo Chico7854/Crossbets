@@ -1,7 +1,7 @@
 #ifndef _ROULETTE_
 #define _ROULETTE_
 
-#include "commom.h"
+#include "../common.h"
 
 #define MAX_BETS 46     //numero máximo de aposta
 
@@ -17,6 +17,6 @@ void waiting_message(int result);
 void check_bets(Bet* bets, int bet_count, int result, int* currency);
 int in_array (int* array, int number, int size);
 void print_lines();
-void start_game(int* currency);
+void start_roulette(int* currency);
 
 #endif

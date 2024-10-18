@@ -8,15 +8,16 @@ void player_bet (Bet* bet, int bet_count, int* currency) {
     int bet_type = 0;                                                                           // tipo de aposta que player escolheu
     char s1[50], s2[50], s3[50];                                                                //vai ser usado para concluir um printf depois
 
-    printf ("Escolha qual aposta fazer:\n\n");
+    printf ("\nEscolha qual aposta fazer:\n\n");
     printf ("[1] Simples\n[2] Baixo | Alto\n[3] Vermelho | Preto\n[4] Par | Ímpar\n[5] Dúzia\n\nDigite aqui: ");             //printa opcoes de apostas
 
     while (bet_type < 1 || bet_type > 5) {                                                                      //verifica se input é valido
         temp = scanf (" %d", &bet_type);
+        while (getchar() != '\n');      //limpa buffer
+
         if (temp != 1 || bet_type < 1 || bet_type > 5) {
             printf ("Comando inválido. Digite o número que corresponde a aposta escolhida.\n\nDigite aqui: ");
         }
-        while (getchar() != '\n');
     }
 
     //aposta simples
@@ -100,20 +101,10 @@ void player_bet (Bet* bet, int bet_count, int* currency) {
 
 //valor da aposta
 int bet_value (Bet* bet, int bet_count, int* currency) {
-    int value;
-    printf ("\nDigite o valor da aposta. Saldo atual: R$%d\n\nR$", *currency);
-    while (1) {
-        temp = scanf ("%d", &value);
-        if (temp == 1 && value > 0 && value <= *currency) {                     //verifica input
-            break;
-        }
-        else {
-            printf ("Valor inválido.\n\nR$");
-            while (getchar() != '\n');
-        }
-    }
-    bet[bet_count].value = value;
-    *currency -= value;
+    int value = scanf_bet(currency);        //input valor da aposta
+
+    bet[bet_count].value = value;           //acerta valor da aposta na variavel bets
+    *currency -= value;     //diminui do saldo a quantidade da aposta
 }
 
 //mensagem de rolando a roleta
@@ -297,7 +288,7 @@ void print_lines() {
     printf ("\n");
 }
 
-void start_game(int* currency) {
+void start_roulette(int* currency) {
     Bet* bets = (Bet *)malloc(MAX_BETS * sizeof(Bet));                          //aloca as apostas
     if (bets == NULL) {                                       // Check if memory allocation failed
         return;
@@ -305,8 +296,6 @@ void start_game(int* currency) {
 
     int bet_count = 0;                                                          // qtd de apostas
     char choice;                                                                //escolha do player
-
-    printf ("\nBem Vind@ a roleta da CrossBets!\n\n");
 
     //rodada de apostas
     while (1) {
@@ -319,30 +308,13 @@ void start_game(int* currency) {
         }
 
         if (*currency < 1) {
-            printf ("\nVocê não tem mais saldo.\n");
+            printf ("\nVocê não tem mais saldo para fazer outras apostas.\n");
             break;
         }
 
         printf ("\nVocê quer fazer mais apostas para esta rodada? [S] Sim | [N] Não\n\nDigite aqui: ");
-        while (1) {                                                                             //verifica input
-            temp = scanf (" %c", &choice);
-
-            if (temp != 1) {                                                                    //verifica se scanf é char
-                printf ("\nComando inválido. Digite [S] ou [N].\n\nDigite aqui: ");
-                while (getchar() != '\n');
-            }
-            else {
-                choice = toupper(choice);
-
-                if (choice != 'S' && choice != 'N') {                                           //verifica se é s ou n
-                    printf ("\nComando inválido. Digite [S] ou [N].\n\nDigite aqui: ");
-                    while (getchar() != '\n');
-                }
-                else {
-                    break;
-                }
-            }
-        }
+        
+        choice = scanf_sn();        //input escolha do player
 
         if (choice == 'N') {
             break;
@@ -355,8 +327,6 @@ void start_game(int* currency) {
     waiting_message(result);        //printa o resultado
 
     check_bets(bets, bet_count, result, currency);
-
-    printf ("\nSaldo Atual: R$%d\n\n", *currency);
 
     free(bets);
 }

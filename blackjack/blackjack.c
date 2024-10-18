@@ -1,7 +1,5 @@
 #include "blackjack.h"
 
-int temp;
-
 //criar um jogo que seja possível contar cartas, usa o mesmo baralho até acabar as cartas
 //regras da bicyclecards
 
@@ -24,14 +22,14 @@ int temp;
 
 //compra carta
 //ajusta em ponteiro a mao e a contagem
-void draw (int* hand, int* hand_index) {
+static void draw (int* hand, int* hand_index) {
     int card = (rand() % 13) + 1;                         //em cassinos é padrão 6 baralhos, entao não tem problema se vier até 24 cartas de mesmo valor, logo não há problema com esse método mesmo gerando repetidas cartas
     hand[*hand_index] = card;                             //1, 11, 12, 13, representam A, J, Q, K, respectivamente
     *hand_index += 1;
 }
 
 //calcula valor da mão
-int hand_score(int* hand, int* count) {
+static int hand_score(int* hand, int* count) {
     int score = 0;
     int aces = 0;                               //guarda quantos aces na mao para acalcular se A vale 1 ou 11
     int card;                                   //variavel temporaria pra guardar carta sendo iterada
@@ -60,28 +58,28 @@ int hand_score(int* hand, int* count) {
 //printa carta
 void print_card (int card) {
     if (card == 1) {
-        printf ("A ");
+        printf ("[A] ");
     }
     else if (card == 11) {
-        printf ("J ");
+        printf ("[J] ");
     }
     else if (card == 12) {
-        printf ("Q ");
+        printf ("[Q] ");
     }
     else if (card == 13) {
-        printf ("K ");
+        printf ("[K] ");
     }
     else {
-        printf ("%d ", card);
+        printf ("[%d] ", card);
     }
 }
 
 //printa só a mão
-void print_hand (int* hand, int* count) {
+static void print_hand (int* hand, int* count) {
     for (int i = 0; i < *count; i++) {
         print_card (hand[i]);
     }
-    printf ("\n\n");
+    printf ("\n");
 }
 
 //verifica se hand tem natural blackjack
@@ -105,42 +103,20 @@ void update_currency(int* currency, int bet_value, int result) {
     else if (result == 1) {     //se player ganha
         *currency += bet_value;
     }
-
-    printf ("\nSaldo atualizado: R$%d\n\n", *currency);
 }
 
 //começa o jogo
 //retorna o quanto a bet deve ser multiplicada pra entrar no saldo
-void start_game(int* currency) {
+void start_blackjack(int* currency) {
     int* player_hand = (int *)malloc(MAX_HAND * sizeof(int));                       //inicializa mao de jogador
     int* dealer_hand = (int *)malloc(MAX_HAND * sizeof(int));                       //incializa mao do dealer
-    int* player_card_count = (int *)malloc(sizeof(int));                            //contagem cartas player
-    int* dealer_card_count = (int *)malloc(sizeof(int));                            //contagem cartas dealer
+    int* player_card_count = (int *)calloc(1, sizeof(int));                            //contagem cartas player e atribui 0
+    int* dealer_card_count = (int *)calloc(1, sizeof(int));                            //contagem cartas dealer e atribui 0
     int player_score = 0;                                                           //score da mao do player
     int dealer_score = 0;                                                           //score da mao do dealer
-    *player_card_count = 0;
-    *dealer_card_count = 0;
-    char player_action = 0;                                     //variavel vai ser usada para checar se player vai comprar carta ou nao
-    int bet_value;      //valor da aposta
-
-    //apresentaçao
-    printf ("\nBem vind@ ao Blackjack da Crossbets!\n\n");
 
     //aposta
-    printf ("Saldo atual: R$%d\n", *currency);
-    printf ("Digite o valor da aposta.\n\nDigite aqui: R$");
-    while (1) {     //verifica input
-        temp = scanf ("%d", &bet_value);
-
-        if (temp == 1) {        //caso o imput esteja correto
-            if (bet_value > 0 && bet_value <= *currency) {
-                break;
-            }
-        }
-        
-        printf ("Comando inválido. Tente novamente.\n\nDigite aqui: ");
-        while (getchar() != '\n');      //limpa buffer
-    }
+    int bet_value = scanf_bet(currency);        //input valor da aposta
 
     //começo da rodada
     draw (player_hand, player_card_count);
@@ -151,45 +127,41 @@ void start_game(int* currency) {
     printf ("\n");
 
     //vez do player
-    while (player_action != 'N') {
-        printf ("Carta do Dealer: %d\n", dealer_hand[0]);                                //printa carta do dealer que fica a mostra
+    while (1) {                                 //loop acaba quando player nao comprar amis cartas
+        printf ("Carta do Dealer: ");                                //printa carta do dealer que fica a mostra
+        print_card(dealer_hand[0]);
+        printf ("\n");
+
         printf ("Suas cartas: ");
         print_hand(player_hand, player_card_count);                                                 //printa cartas do player
 
-        sleep (1);      //espera 1 seg
+        printf ("\nComprar carta? [S][N]\n");
 
-        printf ("Comprar carta? [S][N]\n");
+        char player_action = scanf_sn();        //input escolha do player                                                                      
 
-        char player_action;
-
-        while (1) {                                                                 //verifica input
-            temp = scanf (" %c", &player_action);                                   //perguntar ação ao player em loop, apenas 's' ou 'n'
-                if  (temp == 1) {
-                    player_action = toupper(player_action);
-                    if (player_action == 'S' || player_action != 'N') {
-                        break;
-                    }
-                }
-                printf ("\nComando inválido. Digite [S] ou [N].\n\nDigite aqui: ");
-                while (getchar() != '\n');
-        }                                                                           
+        printf ("\n");      //melhor visualizacao no terminal
 
         if (player_action == 'S') {                                                 //se player comprar carta
             draw (player_hand, player_card_count);
-            printf ("\nVocê comprou: ");                                              //printa qual carta ele comprou
+            printf ("Você comprou: ");                                              //printa qual carta ele comprou
             print_card (player_hand[*player_card_count - 1]);
-            printf ("\n");
-
-            sleep (1);      //espera 1 seg
+            printf ("\n\n");
         }
-
-        printf ("\n");      //melhor visualizacao no terminal
+        else {
+            break;
+        }
 
         player_score = hand_score (player_hand, player_card_count);
 
         if (player_score > 21) {                                                    //verifica se player estourou 21 pontos
             printf ("Você estourou 21 pontos.\nVocê perdeu. :(\n");
             update_currency (currency, bet_value, 0);       //update saldo, ultimo valor é 0 pq player perdeu
+
+            free (player_hand);     //desaloca memória
+            free (dealer_hand);
+            free (player_card_count);
+            free (dealer_card_count);
+
             return;
         }
     }
@@ -197,23 +169,31 @@ void start_game(int* currency) {
     //vez do dealer
     dealer_score = hand_score (dealer_hand, dealer_card_count);
 
-    while (dealer_score < 17) {                                                     //vez do dealer, regra diz que dealer joga até 17 pontos
-        printf ("Cartas do Dealer: ");
-        print_hand (dealer_hand, dealer_card_count);
+    printf ("Cartas do Dealer: ");      
+    print_hand (dealer_hand, dealer_card_count);        //printa mao do dealer
 
+    while (dealer_score < 17) {                                                     //vez do dealer, regra diz que dealer joga até 17 pontos
         sleep (1);      //espera 1 seg
         
         draw (dealer_hand, dealer_card_count);                                      //compra carta
 
-        printf ("\nDealer comprou: ");
+        printf ("Dealer comprou: ");
         print_card (dealer_hand[*dealer_card_count - 1]);                           //printa carta comprada
         printf ("\n\n");
+
+        sleep(1);       //espera 1 segundo
 
         dealer_score = hand_score (dealer_hand, dealer_card_count);                 
 
         if (dealer_score > 21) {
             printf ("Dealer estourou 21 pontos.\nVocê ganhou! :)\n");               //verifica se dealer estourou 21 pontos  
             update_currency (currency, bet_value, 1);       //update saldo, ultimo valor é 1 pq player ganhou    
+
+            free (player_hand);     //desacloca memória
+            free (dealer_hand);
+            free (player_card_count);
+            free (dealer_card_count);
+
             return;
         }
     }
@@ -225,13 +205,17 @@ void start_game(int* currency) {
     print_hand (player_hand, player_card_count);
     printf ("\n");
 
+    sleep(1);       //espera 1 segundo
+
+    player_score = hand_score (player_hand, player_card_count);
+
     if (player_score > dealer_score) {                              //se player ganha
         printf ("Você ganhou! :)\n");
         update_currency (currency, bet_value, 1);       //update saldo
     }
     else if (player_score < dealer_score) {                         //se player perde
         printf ("Você perdeu.\n");
-        update_currency (currency, bet_value, 1);       //update saldo
+        update_currency (currency, bet_value, 0);       //update saldo
     }       
     else {                                                          //se player empata
         printf ("Você empatou.\n");     //nao precisar dar update no saldo pq empate n perde nem ganha

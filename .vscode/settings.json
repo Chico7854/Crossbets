@@ -5,6 +5,8 @@
         "type_traits": "c",
         "baccarat.h": "c",
         "common.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "TEST.C": "cpp",
+        "stdbool.h": "c"
     }
 }

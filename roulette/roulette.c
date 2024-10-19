@@ -1,12 +1,29 @@
 #include "roulette.h"
 
 typedef enum {
-    SIMPLES,
+    SIMPLES = 1,
     ALTOBAIXO,
     VERMELHOPRETO,
     PARIMPAR,
     DUZIA
 } Apostas;
+
+typedef struct {        //cartela de apostas
+    int type;
+    int number;
+    int value;
+} Bet;
+
+static int MAX_BETS = 46;
+
+//funções privadas usadas apenas em roulette.c
+void player_bet (Bet* bet, int bet_count, int* currency);       //input aposta do player
+int bet_value (Bet* bet, int bet_count, int* currency);     //input valor da aposta e arruma saldo
+void waiting_message(int result);       //mensagem da roleta rodando
+void check_bets(Bet* bets, int bet_count, int result, int* currency);       //verifica apostas vencedoras
+int in_array (int* array, int number, int size);        //verifica se number está no array
+void print_lines();     //printa linhas estéticas no terminal
+
 
 //input tipo de aposta do player
 //acerta valores por ponteiros
@@ -17,33 +34,13 @@ void player_bet (Bet* bet, int bet_count, int* currency) {
     printf ("\nEscolha qual aposta fazer:\n\n");
     printf ("[1] Simples\n[2] Baixo | Alto\n[3] Vermelho | Preto\n[4] Par | Ímpar\n[5] Dúzia\n\nDigite aqui: ");        //printa opcoes de apostas
 
-    while (1) {     //verifica se input é valido
-        player_choice = scanf_num();        //input escolha de aposta
-
-        if (player_choice != INVALID) {     //verifica se é numero
-            if (player_choice >= 1 && player_choice <= 5) {
-                break;      //se é valido
-            }
-        }
-
-        printf ("Comando inválido. Digite o um número de [1] a [5].\n\nDigite aqui: ");
-    }
+    player_choice = multiple_choice_numbers(1, 5);      //input escolha de aposta
 
     //aposta simples
     if (player_choice == SIMPLES) {                                                                     
         printf ("\nVocê escolheu Aposta Simples.\nDigite em qual número deseja apostar (0-36): ");
-        int bet_num;                                                                                 //numero da aposta
-        while (1) {                                                                   //roleta europeia tem apenas um 0, entao 'num' vai de 0 a 36
-            bet_num = scanf_num();      //input numero da aposta
 
-            if (bet_num != INVALID) {       //verifica se é numero
-                if (bet_num >= 0 && bet_num <= 36) {        //verifica se ta ontre 0 e 36
-                    break;      //se é valido quebra loop
-                }
-            }
-
-            printf ("\nNúmero inválido. Digite um número de 0 a 36.\n\nDigite aqui: ");     //se é invalido printa e repte loop
-        }
+        int bet_num = multiple_choice_numbers(0, 36);        //input numero da aposta
 
         bet[bet_count].type = player_choice;                                                             //arruma valores em na struct bet
         bet[bet_count].number = bet_num;
@@ -52,25 +49,14 @@ void player_bet (Bet* bet, int bet_count, int* currency) {
         return;
     }
     //aposta duzia
-    else if (bet_type == DUZIA) {
+    else if (player_choice == DUZIA) {
         printf ("\nVocê escolheu Dúzia.\n");
         printf ("Digite [1] para apostar entre 1-12.\nDigite [2] para apostar entre 13-24.\nDigite [3] para apostar entre 25-36.\n\nDigite aqui: ");
 
-        int bet_num;        //escolha da aposta
+        int bet_num = multiple_choice_numbers(1, 3);        //input numero da aposta
 
-        while (1) {
-            bet_num = scanf_num();
-
-            if (bet_num != INAVLID) {
-                if (bet_num )
-                printf ("\nNúmero inválido. Digite [1], [2] ou [3].\n\nDigite aqui: ");
-            }
-            else {
-                break;
-            }
-        }
-        bet[bet_count].type = bet_type;                                                                    //arruma valores em na struct bet
-        bet[bet_count].number = n;
+        bet[bet_count].type = player_choice;                                                                    //arruma valores em na struct bet
+        bet[bet_count].number = bet_num;
         bet_value(bet, bet_count, currency);                                                        //arruma valor da aposta em bet
         return;
     }
@@ -79,19 +65,19 @@ void player_bet (Bet* bet, int bet_count, int* currency) {
 
     //templates para substituir em um printf depois
     //aposta alto/baixo
-    else if (bet_type == 2) {
+    else if (player_choice == ALTOBAIXO) {
         strcpy(s1, "Alto/Baixo"); 
         strcpy(s2, "Alto");      
         strcpy(s3, "Baixo");      
     } 
     //aposta vermelho/preto
-    else if (bet_type == 3) {
+    else if (player_choice == VERMELHOPRETO) {
         strcpy(s1, "Vermelho/Preto");
         strcpy(s2, "Vermelho");
         strcpy(s3, "Preto");
     } 
     //aposta par/impar
-    else if (bet_type == 4) {
+    else if (player_choice == PARIMPAR) {
         strcpy(s1, "Par/Ímpar");
         strcpy(s2, "Par");
         strcpy(s3, "Ímpar");
@@ -99,20 +85,10 @@ void player_bet (Bet* bet, int bet_count, int* currency) {
 
     printf ("\nVocê escolheu %s.\n\nDigite [1] para apostar em %s.\nDigite [2] para apostar em %s.\n\nDigite aqui: ", s1, s2, s3);   //printa as opcoes
     
-    int n;
-    while (1) {                                                                             //input opcoes                                              
-        temp = scanf ("%d", &n);
+    int bet_num = multiple_choice_numbers(1, 2);        //input escolha de aposta
 
-        if (temp != 1 || n < 1 || n > 2) {                                                  //verifica input
-            printf ("\nNúmero inválido. Digite [1] ou [2].\n\nDigite aqui: ");
-            while (getchar() != '\n');
-        }
-        else {
-            break;
-        }
-    }
-    bet[bet_count].type = bet_type;
-    bet[bet_count].number = n;
+    bet[bet_count].type = player_choice;
+    bet[bet_count].number = bet_num;
     bet_value (bet, bet_count, currency);
 }
 
@@ -305,11 +281,12 @@ void print_lines() {
     printf ("\n");
 }
 
-void start_roulette(int* currency) {
+//simula roleta
+int start_roulette(int* currency) {
     Bet* bets = (Bet *)malloc(MAX_BETS * sizeof(Bet));                          //aloca as apostas
-    if (bets == NULL) {                                       // Check if memory allocation failed
+    if (bets == NULL) {                                       // checa se alocou memoria
         printf ("Alocação de memória falhou.\n");
-        return;     //se alocação de memória falhar
+        return MEMORY_ERROR;     //se alocação de memória falhar
     }
 
     int bet_count = 0;                                                          // qtd de apostas
@@ -317,15 +294,15 @@ void start_roulette(int* currency) {
 
     //rodada de apostas
     while (1) {
-        player_bet(bets, bet_count, currency);
+        player_bet(bets, bet_count, currency);      //escolha da aposta
         bet_count ++;
 
-        if (bet_count > MAX_BETS) {                                             //verifica se passou max apostas
+        if (bet_count > MAX_BETS) {                                             //verifica se passou maximo de apostas
             printf ("\nVocê chegou no limite de apostas nessa rodada.\n");
             break;
         }
 
-        if (*currency < 1) {
+        if (*currency < 1) {        //verifica se acabou saldo
             printf ("\nVocê não tem mais saldo para fazer outras apostas.\n");
             break;
         }
@@ -334,8 +311,8 @@ void start_roulette(int* currency) {
         
         choice = scanf_sn();        //input escolha do player
 
-        if (choice == 'N') {
-            break;
+        if (choice == 'N') {        
+            break;      //se player nao quiser fazer amis apostas quebra o loop
         }
     }
 
@@ -344,7 +321,7 @@ void start_roulette(int* currency) {
 
     waiting_message(result);        //printa o resultado
 
-    check_bets(bets, bet_count, result, currency);
+    check_bets(bets, bet_count, result, currency);      //verifica quais apostas player ganhou e acerta o saldo
 
     free(bets);
 }

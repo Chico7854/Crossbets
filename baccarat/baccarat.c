@@ -1,53 +1,23 @@
 #include "baccarat.h"
-//regras da wikipedia
-/*
-versao punto banco
-bet
-bet on pairs
-deal cards
-count score
-draw third card
-compare results
-pay bet, if draw 9:1
-*/
+//baseado nas regras da wikipedia, versao punto banco (mais jogada em cassinos)
 
-//compra cartas
-static void draw (int* hand, int* count) {
-    hand[*count] = (rand() % 10) + 1;       //valor maximo é 10, se tirar 10 depois ramdomiza qual carta é
-    (*count) ++;
-}
+static int MAX_HAND = 3;        //numero maximo de cartas na mão
 
-//printa mao
-static void print_hand(int* hand, int* count) {
-    for (int i = 0; i < *count; i++) {
-        int carta = hand[i];       //carta sendo iterada
+typedef enum {
+    PERDEU = 0,
+    GANHOU
+} BetResult;
 
-        if (carta == 1) {     //se carta for um A
-            printf ("[A] ");
-        }
-        else if (carta == 10) {        //caso carta tem valor 10, ramdomiza qual carta vai ser, 10 ou J ou Q ou K
-            int random = rand() % 4;
+typedef enum {
+    JOGADOR = 1,
+    BANCO,
+    EMPATE
+} Winner;
 
-            if (random == 0) {
-                printf ("[10] ");
-            }
-            else if (random == 1) {
-                printf ("[J] ");
-            }
-            else if (random == 2) {
-                printf ("[Q] ");
-            }
-            else {
-                printf ("[K] ");
-            }
-        }
-        else {
-            printf ("[%d] ", carta);     //se carta for qlq outra apenas printa valor da carta   
-        }
-    }
-
-    printf ("(Total: %d)\n", hand_score(hand, count));      //printa resultado total da mao
-}
+static int hand_score (int* hand, int* count);     //valor da mao
+static void first_draw_round (int* player_hand, int* dealer_hand, int* player_card_count, int* dealer_card_count);      //simula compra de cartas inciais
+static void third_card_draw (int* player_hand, int* dealer_hand, int* player_card_count, int* dealer_card_count);       //verifica e simula comrpa da terceira carta
+static int final_result (int* player_hand, int* dealer_hand, int* player_card_count, int* dealer_card_count);       //verifica e printa resultado final
 
 //calcula valor da mao
 static int hand_score (int* hand, int* count) {
@@ -60,74 +30,73 @@ static int hand_score (int* hand, int* count) {
     return result % 10;     //retorna módulo de 10 do resultado, regra padrao de baccard
 }
 
-
-
-//simula baccarat
-void start_baccarat (int* currency) {
-    int* dealer_hand;
-    int* player_hand;
-    int* dealer_card_count;
-    int* player_card_count;
-
-    if (!initialize_hands(&player_hand, &dealer_hand, &player_card_count, &dealer_card_count, MAX_HAND_BACCARAT)) {
-        return;
-    }
-
-    int player_total;       //valor da mao do player
-    int dealer_total;        //valor da mao do dealer
-    int player_choice;     //escolha do player em quem apostar
-
-    //aposta
-    int bet_value = scanf_bet(currency);        //valor da aposta
-
-    printf ("\nEscolha qual aposta fazer:\n\n");
-    printf ("[1] Vitória do Jogador\n[2] Vitória do Banco\n[3] Empate\n\nDigite aqui: ");      //print opcoes de aposta
-
-    while (1) {     //verificacao de input
-        player_choice = scanf_num();        //input escolha do jogador
-
-        if (player_choice != INVALID) {
-            if (player_choice >= 1 && player_choice <= 3) {
-                break;      //input valido
-            }
+//verifica aposta e atualiza saldo, retorna se venceu ou nao
+int bet_result(int player_choice, int result, int* currency, int bet_value) {
+    if (result != EMPATE) {     //se jogador ou banco ganharam
+        if (player_choice == result) {      //se player acertou aposta
+            *currency += bet_value;
+            return GANHOU;
         }
-
-        printf ("\nComando inválido. Digite um número de [1] a [3].\n\nDigite aqui: ");
+        else {      //se player errou aposta
+            *currency -= bet_value;
+            return PERDEU;
+        }
     }
-    
+    else {      //se jogar e banco empataram
+        if (player_choice == result) {      //se player acertou aposta
+            *currency += 8 * bet_value;
+            return GANHOU;
+        }
+        else {      //se player errou aposta
+            *currency -= bet_value;
+            return PERDEU;
+        }
+    }
+}
+
+//simula a compra de cartas das maos iniciais do delaer e do player
+static void first_draw_round (int* player_hand, int* dealer_hand, int* player_card_count, int* dealer_card_count) {
     //dealer compra 2 cartas
     draw(dealer_hand, dealer_card_count);
     draw(dealer_hand, dealer_card_count);
+
     //player compra 2 cartas
     draw(player_hand, player_card_count);
     draw(player_hand, player_card_count);
+
+    //atualiza pontuação das maos
+    int player_total = hand_score(player_hand, player_card_count);       //valor da mao do player
+    int dealer_total = hand_score(dealer_hand, dealer_card_count);        //valor da mao do dealer
 
     //printa mao do player
     sleep(1);       //espera 1 segundo
 
     printf ("\nCartas do Jogador: ");
-    print_hand(player_hand, player_card_count);
+    print_hand(player_hand, player_card_count, player_total);
     
     //printa mao do dealer
     printf ("Cartas do Banco: ");
-    print_hand(dealer_hand, dealer_card_count);
+    print_hand(dealer_hand, dealer_card_count, dealer_total);
+}
 
+//simula turno de verificacao e compra de terceira carta
+static void third_card_draw (int* player_hand, int* dealer_hand, int* player_card_count, int* dealer_card_count) {
     //verifica se alguem tem natural baccard
-    player_total = hand_score(player_hand, player_card_count);      //calcula total do player
-    dealer_total = hand_score(dealer_hand, dealer_card_count);      //calcula total do dealer
+    int player_total = hand_score(player_hand, player_card_count);      //calcula total do player
+    int dealer_total = hand_score(dealer_hand, dealer_card_count);      //calcula total do dealer
 
-    if (player_total < 8 && dealer_total < 8)  {        //se ambos NAO tiverem natural o jogo continua
-
+    if (player_total < 8 && dealer_total < 8)  {        //se ambos NAO tiverem natural baccard o jogo continua
         //verifica se player compra terceira carta
         if (player_total > 5) {     //player nao compra carta
             if (dealer_total < 6 ) {        //verifica se dealer compra terceira carta
-                draw(dealer_hand, dealer_card_count);
+                draw(dealer_hand, dealer_card_count);       //dealer compra terceira carta
 
                 dealer_total = (hand_score(player_hand, player_card_count));        //atualiza total
 
                 sleep(1);       //espera 1 segundo
 
-                printf ("\nBanco comprou terceira carta: [%d] ", dealer_hand[*dealer_card_count - 1]);       //printa qual carta dealer comprou
+                printf ("\nBanco comprou terceira carta: ");       
+                print_card(dealer_hand[*dealer_card_count - 1]);        //printa qual carta dealer comprou
                 printf ("(Novo total: %d)\n", dealer_total);        //printa novo total
             }
         }
@@ -140,7 +109,8 @@ void start_baccarat (int* currency) {
 
             sleep(1);       //espera 1 segundo
 
-            printf ("\nPlayer comprou terceira carta: [%d] ", player_third);       //printa qual carta player comprou
+            printf ("\nPlayer comprou terceira carta: ");
+            print_card(player_third);       //printa qual carta player comprou
             printf ("(Novo total: %d)\n", player_total);        //printa novo total
 
             //verifica se dealer compra terceira carta
@@ -180,82 +150,102 @@ void start_baccarat (int* currency) {
 
                 sleep(1);       //espera 1 segundo
 
-                printf ("\nBanco comprou terceira carta: [%d] ", dealer_hand[*dealer_card_count - 1]);       //printa qual carta dealer comprou
-
+                printf ("\nBanco comprou terceira carta: ");       
+                print_card(dealer_hand[*dealer_card_count - 1]);        //printa qual carta dealer comprou
                 printf ("(Novo total: %d)\n", dealer_total);        //printa novo total
             }
         }
     }
+}
 
+//verifica e printa resultado final
+static int final_card_result (int* player_hand, int* dealer_hand, int* player_card_count, int* dealer_card_count) {
     //printa resultado final
     sleep(1);       //espera 1 segundo
+
+    int player_total = hand_score(player_hand, player_card_count);
+    int dealer_total = hand_score(dealer_hand, dealer_card_count);
 
     printf ("\nResultado Final:\n");
 
     printf ("Cartas do Jogador: ");     //printa resultado do player
-    print_hand(player_hand, player_card_count);
+    print_hand(player_hand, player_card_count, player_total);
 
     printf ("Cartas do Banco: ");     //printa resultado do dealer
-    print_hand(dealer_hand, dealer_card_count);
+    print_hand(dealer_hand, dealer_card_count, dealer_total);
 
     //printa quem ganhou
-    int result;     //guarda resultado para comparar com aposta
+    Winner result;     //guarda resultado para comparar com aposta
 
     sleep(1);       //espera 1 segundo
 
     if (player_total > dealer_total) {
         printf ("\nJogador ganhou. ");
-        result = 1;
+        result = JOGADOR;
     }
     else if (dealer_total > player_total) {
         printf ("\nBanco ganhou. ");
-        result = 2;
+        result = BANCO;
     }
     else {
         printf ("\nJogador e Banco empataram. ");
-        result = 3;
+        result = EMPATE;
     }
 
-    //verifica aposta
-    int bet_result;     //guarda resultado da aposta, variavel para nao ter que ficar repetindo printf
-    if (player_choice == 1) {      //apostou vitoria do player
-        if (result == 1) {      //ganhou aposta
-            bet_result = 1;
-            *currency += bet_value;     //ajusta saldo
-        }
-        else {      //perdeu aposta
-            bet_result = 0;
-            *currency -= bet_value;     //ajusta saldo
-        }
+    return result;
+}
+
+//rodada de verificação da aposta
+static void bet_update_round (int player_choice, int result, int* currency, int bet_value) {
+    BetResult player_bet;     //guarda resultado da aposta, variavel para nao ter que ficar repetindo printf
+    if (player_choice == JOGADOR) {      //se apostou vitoria do player
+        player_bet = bet_result(player_choice, result, currency, bet_value);      //verifica se player ganhou aposta
     }
-    else if (player_choice == 2) {     //apostou na vitoria do dealer
-        if (result == 2) {      //ganhou a aposta
-            bet_result = 1;
-            *currency += bet_value;     //ajusta saldo
-        }
-        else {      //perdeu a aposta
-            bet_result = 0;
-            *currency -= bet_value;     //ajusta saldo
-        }
+    else if (player_choice == BANCO) {     //se apostou na vitoria do dealer
+        player_bet = bet_result(player_choice, result, currency, bet_value);      //verifica se player ganhou aposta
     }
-    else {      //apostou no empate
-        if (result == 3) {      //ganhou a aposta
-            bet_result = 1;
-            *currency += 8 * bet_value;     //ajusta saldo, cashout 8:1
-        }
-        else {      //perdeu a aposta
-            bet_result = 0;
-            *currency -= bet_value;
-        }
+    else {      //se apostou no empate
+        player_bet = bet_result(player_choice, result, currency, bet_value);      //verifica se player ganhou aposta
     }
 
-    //printa resutlado da aposta
-    if (bet_result == 1) {
+    //printa resultado da aposta
+    if (player_bet == GANHOU) {     //se player ganhou aposta
         printf ("Você ganhou a aposta! =D\n");
     }
-    else {
+    else {      //se player perdeu aposta
         printf ("Você perdeu a aposta. :(\n");
     }
+}
+//simula baccarat
+int start_baccarat (int* currency) {
+    int* dealer_hand;       //mao do dealer
+    int* player_hand;       //mao do player
+    int* dealer_card_count;     //contagem de cartas do dealer
+    int* player_card_count;     //contagemd e cartas do player
+
+    if (!initialize_hands(&player_hand, &dealer_hand, &player_card_count, &dealer_card_count, MAX_HAND)) {      //verifica se alocou memória
+        return MEMORY_ERROR;
+    }
+
+    //aposta
+    int bet_value = scanf_bet(currency);        //valor da aposta
+
+    printf ("\nEscolha qual aposta fazer:\n\n");
+    printf ("[1] Vitória do Jogador\n[2] Vitória do Banco\n[3] Empate\n\nDigite aqui: ");      //print opcoes de aposta
+
+    int player_choice = multiple_choice_numbers(1, 3);      //input escolha de aposta do jogador
+    
+    //compra de cartas das maos iniciais
+    first_draw_round (player_hand, dealer_hand, player_card_count, dealer_card_count);
+
+    //verifica se compra terceira carta e entao compra
+    third_card_draw(player_hand, dealer_hand, player_card_count, dealer_card_count);
+
+    //verifica e printa resultado final
+    Winner result = final_card_result(player_hand, dealer_hand, player_card_count, dealer_card_count);
+
+    //verifica aposta
+    bet_update_round(player_choice, result, currency, bet_value);
     
     free(player_card_count);
     free(dealer_card_count);

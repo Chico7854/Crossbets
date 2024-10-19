@@ -2,12 +2,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "lldb",
+            "type": "cppdbg",
             "request": "launch",
             "name": "Debug Cassino",
-            "program": "${workspaceFolder}",
+            "program": "${workspaceFolder}/cassino",   // Ensure this path points to your compiled executable
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",                           // Set to GDB
+            "miDebuggerPath": "/usr/bin/gdb",    // Replace with actual path to gdb.exe
+            "externalConsole": true,
+            "stopAtEntry": false
         }
     ]
 }

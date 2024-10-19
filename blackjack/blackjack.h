@@ -3,8 +3,7 @@
 
 #include "../common.h"
 
-#define DECK_SIZE 52
-#define MAX_HAND 11     //maximo de cartas que pode ter na mão
+#define MAX_HAND_BLACKJACK 11     //maximo de cartas que pode ter na mão
 
 static void draw (int* hand, int* hand_index);             //compra carta
 static int hand_score(int* hand, int* count);              //calcula valor da mao

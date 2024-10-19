@@ -1,51 +1,68 @@
 #include "roulette.h"
 
-int temp;
+typedef enum {
+    SIMPLES,
+    ALTOBAIXO,
+    VERMELHOPRETO,
+    PARIMPAR,
+    DUZIA
+} Apostas;
 
 //input tipo de aposta do player
 //acerta valores por ponteiros
 void player_bet (Bet* bet, int bet_count, int* currency) {
-    int bet_type = 0;                                                                           // tipo de aposta que player escolheu
-    char s1[50], s2[50], s3[50];                                                                //vai ser usado para concluir um printf depois
+    Apostas player_choice;       // tipo de aposta que player escolheu
+    char s1[50], s2[50], s3[50];        //vai ser usado para concluir um printf depois
 
     printf ("\nEscolha qual aposta fazer:\n\n");
-    printf ("[1] Simples\n[2] Baixo | Alto\n[3] Vermelho | Preto\n[4] Par | Ímpar\n[5] Dúzia\n\nDigite aqui: ");             //printa opcoes de apostas
+    printf ("[1] Simples\n[2] Baixo | Alto\n[3] Vermelho | Preto\n[4] Par | Ímpar\n[5] Dúzia\n\nDigite aqui: ");        //printa opcoes de apostas
 
-    while (bet_type < 1 || bet_type > 5) {                                                                      //verifica se input é valido
-        temp = scanf (" %d", &bet_type);
-        while (getchar() != '\n');      //limpa buffer
+    while (1) {     //verifica se input é valido
+        player_choice = scanf_num();        //input escolha de aposta
 
-        if (temp != 1 || bet_type < 1 || bet_type > 5) {
-            printf ("Comando inválido. Digite o número que corresponde a aposta escolhida.\n\nDigite aqui: ");
+        if (player_choice != INVALID) {     //verifica se é numero
+            if (player_choice >= 1 && player_choice <= 5) {
+                break;      //se é valido
+            }
         }
+
+        printf ("Comando inválido. Digite o um número de [1] a [5].\n\nDigite aqui: ");
     }
 
     //aposta simples
-    if (bet_type == 1) {                                                                     
+    if (player_choice == SIMPLES) {                                                                     
         printf ("\nVocê escolheu Aposta Simples.\nDigite em qual número deseja apostar (0-36): ");
-        int n = -1;                                                                                 //numero da aposta
-        while (n < 0 || n > 36) {                                                                   //roleta europeia tem apenas um 0, entao num vai de 0 a 36
-            temp = scanf ("%d", &n);                                                                  
-            if (temp != 1 || n < 0 || n > 36) {                                                     //verifica input
-                printf ("\nNúmero inválido. Digite um número de 0 a 36.\n\nDigite aqui: ");
+        int bet_num;                                                                                 //numero da aposta
+        while (1) {                                                                   //roleta europeia tem apenas um 0, entao 'num' vai de 0 a 36
+            bet_num = scanf_num();      //input numero da aposta
+
+            if (bet_num != INVALID) {       //verifica se é numero
+                if (bet_num >= 0 && bet_num <= 36) {        //verifica se ta ontre 0 e 36
+                    break;      //se é valido quebra loop
+                }
             }
-            while (getchar() != '\n');
+
+            printf ("\nNúmero inválido. Digite um número de 0 a 36.\n\nDigite aqui: ");     //se é invalido printa e repte loop
         }
-        bet[bet_count].type = bet_type;                                                             //arruma valores em na struct bet
-        bet[bet_count].number = n;
+
+        bet[bet_count].type = player_choice;                                                             //arruma valores em na struct bet
+        bet[bet_count].number = bet_num;
         bet_value(bet, bet_count, currency);                                                        //arruma valor da aposta em bet
 
         return;
     }
     //aposta duzia
-    else if (bet_type == 5) {
+    else if (bet_type == DUZIA) {
         printf ("\nVocê escolheu Dúzia.\n");
         printf ("Digite [1] para apostar entre 1-12.\nDigite [2] para apostar entre 13-24.\nDigite [3] para apostar entre 25-36.\n\nDigite aqui: ");
 
-        int n;                                                                                      //escolha da aposta
-        temp = scanf ("%d", &n);
+        int bet_num;        //escolha da aposta
+
         while (1) {
-            if (temp != 1  || n < 1 || n > 3) {
+            bet_num = scanf_num();
+
+            if (bet_num != INAVLID) {
+                if (bet_num )
                 printf ("\nNúmero inválido. Digite [1], [2] ou [3].\n\nDigite aqui: ");
             }
             else {
@@ -291,7 +308,8 @@ void print_lines() {
 void start_roulette(int* currency) {
     Bet* bets = (Bet *)malloc(MAX_BETS * sizeof(Bet));                          //aloca as apostas
     if (bets == NULL) {                                       // Check if memory allocation failed
-        return;
+        printf ("Alocação de memória falhou.\n");
+        return;     //se alocação de memória falhar
     }
 
     int bet_count = 0;                                                          // qtd de apostas
@@ -312,7 +330,7 @@ void start_roulette(int* currency) {
             break;
         }
 
-        printf ("\nVocê quer fazer mais apostas para esta rodada? [S] Sim | [N] Não\n\nDigite aqui: ");
+        printf ("\nVocê quer fazer mais apostas para esta rodada?");
         
         choice = scanf_sn();        //input escolha do player
 

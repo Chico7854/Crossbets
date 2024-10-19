@@ -4,6 +4,7 @@
         "blackjack.h": "c",
         "type_traits": "c",
         "baccarat.h": "c",
-        "common.h": "c"
+        "common.h": "c",
+        "stdio.h": "c"
     }
 }

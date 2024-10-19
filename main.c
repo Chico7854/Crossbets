@@ -3,49 +3,66 @@
 #include "roulette/roulette.h"
 #include "baccarat/baccarat.h"
 
-int interface ();
-int play_again (int* currency);
+//enumera os jogos
+typedef enum {
+    BLACKJACK = 1,
+    ROULETTE,       //2
+    BACCARAT        //3
+} Game;
+
+int interface();
+int play_again(int* currency, int game_choice);
 int check_currency(int* currency);
 
 int main () {
     srand(time(NULL));
 
     int* currency = (int *)malloc(sizeof(int));      //saldo
+
+    if (currency == NULL) {     //verifica de malloc deu certo
+        printf ("Alocação de memória falhou.\n");
+        return 1;
+    }
+
     *currency = 1000000;            //1 milhao de saldo
 
     printf ("\nBem Vind@ ao Cassino Crossbets!\n\nSeu saldo inicial é de R$1.000.000.\n");
 
     while (1) {     //loop até jogador querer sair
-        int game_choice = interface();
+        Game game_choice = interface();      //escolha de jogo
 
-        if (game_choice == 1) {      //blackjack
+        if (game_choice == BLACKJACK) {      //blackjack
             printf ("\nBem vind@ ao Blackjack da Crossbets!\n");
 
             while (1) {      //loop apenas para jogo
                 start_blackjack(currency);
 
-                if (check_currency(currency) == 0) {
-                    free (currency);
-                    return 1;     //se saldo ta zerado acaba programa
-                }
-            
-                if (play_again(currency) == 0) {
-                    break;
-                }
-            }
-        }
-        else if (game_choice == 2) {     //roleta
-            printf ("\nBem Vind@ a Roleta da CrossBets!\n");
-            
-            while (1) {      //loop apenas para jogo
-                start_roulette(currency);
+                sleep(1);       //espera 1 segundo
 
                 if (check_currency(currency) == 0) {
                     free (currency);
                     return 1;     //se saldo ta zerado acaba programa
                 }
             
-                if (play_again(currency) == 0) {
+                if (play_again(currency, game_choice) == 0) {
+                    break;
+                }
+            }
+        }
+        else if (game_choice == ROULETTE) {     //roleta
+            printf ("\nBem Vind@ a Roleta da CrossBets!\n");
+            
+            while (1) {      //loop apenas para jogo
+                start_roulette(currency);
+
+                sleep(1);       //espera 1 segundo
+
+                if (check_currency(currency) == 0) {
+                    free (currency);
+                    return 1;     //se saldo ta zerado acaba programa
+                }
+            
+                if (play_again(currency, game_choice) == 0) {
                     break;
                 }
             }
@@ -56,18 +73,20 @@ int main () {
             while (1) {      //loop apenas para jogo
                 start_baccarat(currency);
 
+                sleep(1);       //espera 1 segundo
+
                 if (check_currency(currency) == 0) {
                     free (currency);
                     return 1;     //se saldo ta zerado acaba programa
                 }
             
-                if (play_again(currency) == 0) {
+                if (play_again(currency, game_choice) == 0) {
                     break;
                 }
             }
         }
 
-        printf ("\nDeseja jogar outro jogo? [S] [N]\n\nDigite aqui: ");       //printa se player quer jogar outro jogo
+        printf ("\nDeseja jogar outro jogo?");       //printa se player quer jogar outro jogo
         
         char choice = scanf_sn();       //input escolha do player
 
@@ -101,12 +120,9 @@ int interface () {
     int player_choice;
 
     while (1) {         //verificacao input
-        int temp = scanf (" %d", &player_choice);       //input escolha de jogo
-        while (getchar() != '\n');      //limpa buffer
+        player_choice = scanf_num();        //input escolha do jogo
 
-        if (temp == 1) {
-            player_choice = toupper(player_choice);
-
+        if (player_choice != INVALID) {        //verifica se é valido
             if (player_choice >= 1 && player_choice <= 3) {
                 break;          //se input for valido
             }
@@ -118,8 +134,20 @@ int interface () {
     return player_choice;
 }
 
-int play_again (int* currency) {
-    printf ("\nSaldo atual: R$%d\n\nDeseja jogar novamente? [S] [N]\n\nDigite aqui: ", *currency);
+int play_again (int* currency, int game_choice) {
+    char game[10];
+
+    //
+    if (game_choice == BLACKJACK) {
+        strcpy (game, "Blackjack");
+    }
+    else if (game_choice == ROULETTE) {
+        strcpy (game, "Roleta");
+    }
+    else {
+        strcpy (game, "Baccarat");
+    }
+    printf ("\nSaldo atual: R$%d\n\nDeseja jogar %s novamente?", *currency, game);
 
     char choice = scanf_sn();       //input escolha do player
 

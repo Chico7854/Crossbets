@@ -64,33 +64,35 @@ static int hand_score (int* hand, int* count) {
 
 //simula baccarat
 void start_baccarat (int* currency) {
-    int* dealer_hand = (int *)malloc(3 * sizeof(int));      //mao do dealer
-    int* player_hand = (int *)malloc(3 * sizeof(int));      //mao do player
-    int* dealer_card_count = (int *)calloc(1, sizeof(int));        //contagem de cartas do dealer e atribui 0
-    int* player_card_count = (int *)calloc(1, sizeof(int));        //contagem de cartas do player e atribui 0
+    int* dealer_hand;
+    int* player_hand;
+    int* dealer_card_count;
+    int* player_card_count;
+
+    if (!initialize_hands(&player_hand, &dealer_hand, &player_card_count, &dealer_card_count, MAX_HAND_BACCARAT)) {
+        return;
+    }
+
     int player_total;       //valor da mao do player
     int dealer_total;        //valor da mao do dealer
-    int player_bet;     //escolha do player em quem apostar
+    int player_choice;     //escolha do player em quem apostar
 
     //aposta
     int bet_value = scanf_bet(currency);        //valor da aposta
-
-    //aposta em pares
 
     printf ("\nEscolha qual aposta fazer:\n\n");
     printf ("[1] Vitória do Jogador\n[2] Vitória do Banco\n[3] Empate\n\nDigite aqui: ");      //print opcoes de aposta
 
     while (1) {     //verificacao de input
-        int temp = scanf (" %d", &player_bet);      //input do player em quem vai apostar
-        while (getchar() != '\n');      //limpa buffer
+        player_choice = scanf_num();        //input escolha do jogador
 
-        if (temp == 1) {
-            if (player_bet >= 1 && player_bet <= 3) {
-                break;      //se input estiver correto
+        if (player_choice != INVALID) {
+            if (player_choice >= 1 && player_choice <= 3) {
+                break;      //input valido
             }
         }
 
-        printf ("\nComando inválido. Digite um número de 1 a 3.\n\nDigite aqui: ");     //se input estiver incorreto
+        printf ("\nComando inválido. Digite um número de [1] a [3].\n\nDigite aqui: ");
     }
     
     //dealer compra 2 cartas
@@ -216,7 +218,7 @@ void start_baccarat (int* currency) {
 
     //verifica aposta
     int bet_result;     //guarda resultado da aposta, variavel para nao ter que ficar repetindo printf
-    if (player_bet == 1) {      //apostou vitoria do player
+    if (player_choice == 1) {      //apostou vitoria do player
         if (result == 1) {      //ganhou aposta
             bet_result = 1;
             *currency += bet_value;     //ajusta saldo
@@ -226,7 +228,7 @@ void start_baccarat (int* currency) {
             *currency -= bet_value;     //ajusta saldo
         }
     }
-    else if (player_bet == 2) {     //apostou na vitoria do dealer
+    else if (player_choice == 2) {     //apostou na vitoria do dealer
         if (result == 2) {      //ganhou a aposta
             bet_result = 1;
             *currency += bet_value;     //ajusta saldo

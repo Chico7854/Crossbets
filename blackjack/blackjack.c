@@ -79,6 +79,10 @@ static void print_hand (int* hand, int* count) {
     for (int i = 0; i < *count; i++) {
         print_card (hand[i]);
     }
+
+    int total = hand_score(hand, count);
+
+    printf ("(Total: %d)", total);
     printf ("\n");
 }
 
@@ -108,10 +112,15 @@ void update_currency(int* currency, int bet_value, int result) {
 //começa o jogo
 //retorna o quanto a bet deve ser multiplicada pra entrar no saldo
 void start_blackjack(int* currency) {
-    int* player_hand = (int *)malloc(MAX_HAND * sizeof(int));                       //inicializa mao de jogador
-    int* dealer_hand = (int *)malloc(MAX_HAND * sizeof(int));                       //incializa mao do dealer
-    int* player_card_count = (int *)calloc(1, sizeof(int));                            //contagem cartas player e atribui 0
-    int* dealer_card_count = (int *)calloc(1, sizeof(int));                            //contagem cartas dealer e atribui 0
+    int* player_hand;
+    int* dealer_hand;
+    int* player_card_count;
+    int* dealer_card_count;
+
+    if (!initialize_hands(&player_hand, &dealer_hand, &player_card_count, &dealer_card_count, MAX_HAND_BLACKJACK)) {
+        return;
+    }   
+
     int player_score = 0;                                                           //score da mao do player
     int dealer_score = 0;                                                           //score da mao do dealer
 
@@ -135,23 +144,30 @@ void start_blackjack(int* currency) {
         printf ("Suas cartas: ");
         print_hand(player_hand, player_card_count);                                                 //printa cartas do player
 
-        printf ("\nComprar carta? [S][N]\n");
+        printf ("\nComprar carta? ");
 
         char player_action = scanf_sn();        //input escolha do player                                                                      
 
         printf ("\n");      //melhor visualizacao no terminal
 
         if (player_action == 'S') {                                                 //se player comprar carta
-            draw (player_hand, player_card_count);
+            draw (player_hand, player_card_count);      //compra carta
+
             printf ("Você comprou: ");                                              //printa qual carta ele comprou
-            print_card (player_hand[*player_card_count - 1]);
+            fflush(stdout);     //printa buffer
+
+            sleep(1);       //espera 1 segundo
+
+            print_card (player_hand[*player_card_count - 1]);       //printa carta comprada
             printf ("\n\n");
+
+            sleep(1);       //espera 1 segundo
         }
         else {
-            break;
+            break;      //se player nao comrpar carta
         }
 
-        player_score = hand_score (player_hand, player_card_count);
+        player_score = hand_score (player_hand, player_card_count);     //valor da mao do player
 
         if (player_score > 21) {                                                    //verifica se player estourou 21 pontos
             printf ("Você estourou 21 pontos.\nVocê perdeu. :(\n");
@@ -169,23 +185,25 @@ void start_blackjack(int* currency) {
     //vez do dealer
     dealer_score = hand_score (dealer_hand, dealer_card_count);
 
-    printf ("Cartas do Dealer: ");      
-    print_hand (dealer_hand, dealer_card_count);        //printa mao do dealer
-
     while (dealer_score < 17) {                                                     //vez do dealer, regra diz que dealer joga até 17 pontos
-        sleep (1);      //espera 1 seg
+        printf ("Cartas do Dealer: ");
+        print_hand(dealer_hand, dealer_card_count);        //printa mao do dealer
         
         draw (dealer_hand, dealer_card_count);                                      //compra carta
 
         printf ("Dealer comprou: ");
+        fflush(stdout);     //printa buffer
+
+        sleep (1);      //espera 1 seg
+
         print_card (dealer_hand[*dealer_card_count - 1]);                           //printa carta comprada
         printf ("\n\n");
-
-        sleep(1);       //espera 1 segundo
 
         dealer_score = hand_score (dealer_hand, dealer_card_count);                 
 
         if (dealer_score > 21) {
+            sleep(1);       //espera 1 segundo
+
             printf ("Dealer estourou 21 pontos.\nVocê ganhou! :)\n");               //verifica se dealer estourou 21 pontos  
             update_currency (currency, bet_value, 1);       //update saldo, ultimo valor é 1 pq player ganhou    
 

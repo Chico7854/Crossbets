@@ -1,97 +1,154 @@
 #include "common.h"
 
-//verifica se input esta entre os numeros válidos
-int multiple_choice_numbers(int min, int max) {
-    int choice;     //escolha do jogador
+//apaga espaços no começo e fim da string
+char* trim_space(char* str) {
+    char *end;
 
-    while (1) {
-        choice = scanf_num();       //input escolha
+    //apaga espaços no começo da string
+    while(isspace((unsigned char)*str)) str++;
 
-        if (choice != INVALID) {        //verifica se é numero
-            if (choice >= min && choice <= max) {       //verifica se é uma opção válida
-                return choice;
-            }
-        }
+    if(*str == 0)
+        return str;
 
-        if ((max - min) == 1) {     //se tiver apenas duas opçoes de escolha
-            printf ("\nComando inválido. Digite [%d] ou [%d].\n\nDigite aqui: ", min, max);
-        }
-        else {      //se tem 3 opcoes ou mais de escolha
-            printf ("\nComando inválido. Digite um número de [%d] a [%d].\n\nDigite aqui: ", min, max);
-        }
+    // Remove o caractere de nova linha, se houver
+    if ((end = strchr(str, '\n')) != NULL) {
+        *end = '\0';
     }
+
+    //apaga espaços no fim da string
+    end = str + strlen(str) - 1;
+    while(end > str && isspace((unsigned char)*end)) end--;
+
+    *(end+1) = '\0';
+
+    return str;
 }
 
-//scanf para numeros
-int scanf_num () {
-    char input[10];
+//verifica se input esta entre os numeros válidos
+int scanf_num(int min, int max) {
+    int choice = INVALID;     //escolha de numero do user
 
-    while (1) {
-        fgets(input, sizeof(input), stdin);     // Lê a entrada do usuário
+    while (choice == INVALID) {     //while loop ate scanf ser valido
+        char input[10];     //input do user
 
-        // Limpa o buffer se o input for maior que o tamanho do buffer
-        if (!strchr(input, '\n')) {
-            while (getchar() != '\n');
-        }
+        //verificacao se input é numero
+        if (fgets(input, sizeof(input), stdin)) {     // Lê a entrada do usuário e verifica se fgets funcionou
 
-        // Verifica se a entrada contém apenas dígitos
-        for (int i = 0; input[i] != '\0' && input[i] != '\n'; i++) {
-            if (!isdigit(input[i])) {
-                return INVALID;      //se for invalido
+            // Limpa o buffer se o input for maior que o tamanho do buffer
+            if (!strchr(input, '\n')) {
+                while (getchar() != '\n');
+            }
+
+            //limpa espaços sobrando
+            char trimmed_input[10];
+            strcpy(trimmed_input, trim_space(input));
+
+            // Verifica se a entrada contém apenas dígitos
+            bool isnumber = true;
+            for (int i = 0; trimmed_input[i] != '\0' && trimmed_input[i] != '\n'; i++) {
+                if (!isdigit(trimmed_input[i])) {
+                isnumber = false;      //se for invalido
+                }
+            }     
+
+            if (isnumber) {        //se input for numero
+                sscanf(trimmed_input, "%d", &choice);        //converte a string para um inteiro 
+                if (choice < min || choice > max) {       //verifica se valor esta em intervalo invalido
+                    choice = INVALID;       //se for invalido retorna ao valor INVALID para rodar loop de novo
+                }
             }
         }
 
-        int player_choice;
-
-        sscanf(input, "%d", &player_choice);        //converte a string para um inteiro      
-        
-        return player_choice;
+        if (choice == INVALID) {        //verifica se input foi validado
+            if ((max - min) == 1) {     //se tiver apenas duas opçoes de escolha
+                printf ("\nComando inválido. Digite [%d] ou [%d].\n\nDigite aqui: ", min, max);
+            }
+            else {      //se tem 3 opcoes ou mais de escolha
+                printf ("\nComando inválido. Digite um número de [%d] a [%d].\n\nDigite aqui: ", min, max);
+            }
+        }
     }
 }
 
 //scanf para pergunta de sim ou nao
 char scanf_sn () {
-    char choice[3];
+    char choice = INVALID;
 
     printf("[S] [N]\n\nDigite aqui: ");
 
-    while (1) {     //verifica input
-        if (fgets(choice, sizeof(choice), stdin) != NULL) {
-            if (choice[1] == '\n') {        //verifica se input tem apenas 1 caractere
-                choice[0] = toupper(choice[0]);       //converte caracterre para maiusculo
+    while (choice == INVALID) {     //verifica input
+        char input[10];
 
-                if (choice[0] == 'S' || choice[0] == 'N') {     //verifica se input é S ou N
-                    break;      //input correto
+        if (fgets(input, sizeof(input), stdin)) {     //le entrada do usuario e verifica se fgets funcionou
+            if (!strchr(input, '\n')) {        //verifica se tem algo a mais no buffer, se achar \n na string signifca q nao tem
+                while (getchar() != '\n');      //limpa buffer
+            }
+
+            char trimmed_input[10];
+            strcpy(trimmed_input, trim_space(input));       //apaga espaços extras
+
+            int x = strlen(trimmed_input);
+
+            if (strlen(trimmed_input) == 1) {        //verifica se input tem apenas 1 caractere
+                sscanf(trimmed_input, "%c", &choice);        //converte input para caractere
+
+                choice = toupper(choice);       //converte caractere para maiusculo
+                
+                if (choice != 'S' && choice != 'N') {       //verifica se input é S ou N
+                    choice = INVALID;       //se for invalido retorna para valor do while
                 }
-            }   
+            }
         }
 
-        if (!strchr(choice, '\n')) {        //verifica se tem algo a mais no buffer, se achar \n na string signifca q nao tem
-            while (getchar() != '\n');      //limpa buffer
+        if (choice == INVALID) {
+            printf ("\nComando inválido. Digite [S] ou [N].\n\nDigite aqui: ");
         }
-
-        printf ("\nComando inválido. Digite [S] ou [N].\n\nDigite aqui: ");
     }
 
-    return choice[0];
+    return choice;
 }
 
 //scanf para receber apostas
 int scanf_bet(int* currency) {
-    int bet_value;     
+    int bet_value = INVALID;     
 
     printf ("\nSaldo atual: R$%d\n", *currency);
     printf ("Digite o valor da aposta.\n\nDigite aqui: R$");
 
-    while (1) {
-        bet_value = scanf_num();
-        if (bet_value != INVALID) {       //verifica se input é numero
-            if (bet_value >= 0 && bet_value <= *currency) {     //verifica se input esta me intervalo valido
-                return bet_value;       //se input esta correto retorna valor da aposta
+    //validação do input
+    while (bet_value == INVALID) {
+        char input[10];     //input do user
+
+        //verificacao se input é numero
+        if (fgets(input, sizeof(input), stdin)) {     // Lê a entrada do usuário e verifica se fgets funcionou
+
+            // Limpa o buffer se o input for maior que o tamanho do buffer
+            if (!strchr(input, '\n')) {
+                while (getchar() != '\n');
+            }
+
+            char trimmed_input[10];
+            strcpy(trimmed_input, trim_space(input));       //limpa espaços sobrando
+
+            // Verifica se a entrada contém apenas dígitos
+            bool isnumber = true;
+            for (int i = 0; trimmed_input[i] != '\0' && trimmed_input[i] != '\n'; i++) {
+                if (!isdigit(trimmed_input[i])) {
+                    isnumber = false;      //se for invalido
+                }
+            }     
+
+            if (isnumber) {
+                sscanf(trimmed_input, "%d", &bet_value);
+                if (bet_value < 0 || bet_value > *currency) {       //verifica se valor esta em intervalo invalido
+                    bet_value = INVALID;        //se for invalido retorna ao valor INVALID para rodar loop de novo
+                }
             }
         }
-         
-        printf ("Comando inválido. Tente novamente.\n\nDigite aqui: R$");       //se input esta incorreto printa e repete loop
+        
+        if (bet_value == INVALID) {     //verifica se input foi validado
+            printf ("Comando inválido. Tente novamente.\n\nDigite aqui: R$");       //se input esta incorreto printa e repete loop
+        }
     }
 }
 
@@ -102,7 +159,6 @@ int initialize_hands(int** player_hand, int** dealer_hand, int** player_card_cou
     *player_card_count = (int *)calloc(1, sizeof(int));                            //contagem cartas player e atribui 0
     *dealer_card_count = (int *)calloc(1, sizeof(int));                            //contagem cartas dealer e atribui 0
 
-    //verifica se foi alocada memória
     if (*player_hand == NULL || *dealer_hand == NULL || *player_card_count == NULL || *dealer_card_count == NULL) {
         free(*player_hand);
         free(*dealer_hand);
@@ -110,10 +166,10 @@ int initialize_hands(int** player_hand, int** dealer_hand, int** player_card_cou
         free(*dealer_card_count);
 
         printf ("Alocação de memória falhou.\n");
-        return 0;       //se falhar alocação
+        return MEMORY_ERROR;
     }
     else {
-        return 1;       //se alocar corretamente
+        return true;
     }
 }
 

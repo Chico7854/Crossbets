@@ -3,7 +3,6 @@
 #include "roulette/roulette.h"
 #include "baccarat/baccarat.h"
 
-//enumera os jogos
 typedef enum {
     BLACKJACK = 1,
     ROULETTE,       //2
@@ -17,14 +16,15 @@ typedef enum {
 } PlayAgain;
 
 int game_selection();        //simula interface de escolha de jogo
-int play_again(int* currency, int game_choice);     //
+int play_again(int* currency, int game_choice);     //verifica saldo e pergunta para player se quer continuar jogando jogo
+
 
 int main () {
     srand(time(NULL));
 
     int* currency = (int *)malloc(sizeof(int));      //saldo
 
-    if (currency == NULL) {     //verifica de malloc deu certo
+    if (currency == NULL) {
         printf ("Alocação de memória falhou.\n");
         return 1;
     }
@@ -33,55 +33,54 @@ int main () {
 
     printf ("\nBem Vind@ ao Cassino Crossbets!\n\nSeu saldo inicial é de R$1.000.000.\n");
 
-    while (1) {     //loop até jogador querer sair
-        Game game_choice = game_selection();      //escolha de jogo
+    PlayAgain game_result = PLAYAGAIN_SIM;
 
-        if (game_choice == BLACKJACK) {      //blackjack
+    while (game_result == PLAYAGAIN_SIM) {
+        Game game_choice = game_selection();
+
+        if (game_choice == BLACKJACK) {
             printf ("\nBem vind@ ao Blackjack da Crossbets!\n");
  
-            while (1) {      //loop apenas para jogo
-                if(start_blackjack(currency) == MEMORY_ERROR) {     //abre blackjack
-                    return 1;       //se alocacao de memoria falhar
+            while (game_result == PLAYAGAIN_SIM) {
+                if (start_blackjack(currency) == MEMORY_ERROR) {
+                    return 1;
                 }
 
-                if (play_again(currency, game_choice) == POBRE) {
-                    return 2;
-                }
+                game_result = play_again(currency, game_choice);
             }
         }
-        else if (game_choice == ROULETTE) {     //roleta
+        else if (game_choice == ROULETTE) {
             printf ("\nBem Vind@ a Roleta da CrossBets!\n");
             
-            while (1) {      //loop apenas para jogo
-                if(start_roulette(currency) == MEMORY_ERROR) {     //abre roleta
-                    return 1;       //se alocacao de memoria falhar
+            while (game_result == PLAYAGAIN_SIM) {
+                if(start_roulette(currency) == MEMORY_ERROR) {
+                    return 1;
                 }
 
-                if (play_again(currency, game_choice) == POBRE) {
-                    return 2;
-                }
+                game_result = play_again(currency, game_choice);     
             }
         }
-        else {      //baccarat
+        else if (game_choice == BACCARAT) {
             printf ("\nBem Vind@ ao Baccarat Punto Banco da CrossBets!\n");
             
-            while (1) {      //loop apenas para jogo
-                if(start_baccarat(currency) == MEMORY_ERROR) {     //abre blackjack
-                    return 1;       //se alocacao de memoria falhar
+            while (game_result == PLAYAGAIN_SIM) {
+                if(start_baccarat(currency) == MEMORY_ERROR) {
+                    return 1;
                 }
 
-                if (play_again(currency, game_choice) == POBRE) {
-                    return 2;
-                }
+                game_result = play_again(currency, game_choice);     
             }
         }
 
-        printf ("\nDeseja jogar outro jogo?");       //printa se player quer jogar outro jogo
-        
-        char choice = scanf_sn();       //input escolha do player
+        //verifica se player nao quer continuar jogando
+        if (game_result == PLAYAGAIN_NAO) {
+            printf ("\nDeseja jogar outro jogo? ");
+            
+            char choice = scanf_sn();       //input escolha do player
 
-        if (choice == 'N') {        //se nao quiser jogar outro jogo
-            break;      //quebra loop e sai do jogo
+            if (choice == 'S') {        //se player quiser jogar outro jogo
+                game_result = PLAYAGAIN_SIM;
+            }
         }
     }
 
@@ -92,6 +91,7 @@ int main () {
     return 0;
 }
 
+//interface de escolha de jogo
 int game_selection() {
     printf ("Escolha qual jogo você deseja jogar.\n\n");
     
@@ -99,7 +99,7 @@ int game_selection() {
         printf ("-");
     }
 
-    printf ("\n[1] Blackjack\n[2] Roleta\n[3] Baccarat\n");        //printa opcoes de jogos
+    printf ("\n[1] Blackjack\n[2] Roleta\n[3] Baccarat\n");
 
     for (int i = 0; i < 15; i++) {      //printa interface
         printf ("-");
@@ -107,39 +107,21 @@ int game_selection() {
 
     printf ("\n\nDigite sua escolha: ");
 
-    int player_choice;
-
-    while (1) {         //verificacao input
-        player_choice = scanf_num();        //input escolha do jogo
-
-        if (player_choice != INVALID) {        //verifica se é valido
-            if (player_choice >= 1 && player_choice <= 3) {
-                break;          //se input for valido
-            }
-        }
-
-        printf ("\nComando inválido. Digite um número de [1] a [3].\n\nDigite aqui: ");
-    }
-
-    return player_choice;
+    int player_choice = scanf_num(1, 3);
 }
 
+//verifica saldo e pergunta para player se quer continuar jogando jogo
 int play_again (int* currency, int game_choice) {
     sleep(1); 
 
     if (*currency == 0) {       //se zerou saldo
-        sleep(1);       //espera 1 segundo
+        printf ("\nVocê perdeu todo seu dinheiro.\n");
 
-        printf ("\nVocê perdeu todo seu dinheiro. Obrigado por jogar no Cassino Crossbets. =D\n\n");
-
-        free(currency);     //desaloca memória
-
-        return POBRE;       //retorna 0 se saldo ta zerado
+        return POBRE;       //retorna POBRE se saldo ta zerado
     }
 
     char game[10];
 
-    //
     if (game_choice == BLACKJACK) {
         strcpy (game, "Blackjack");
     }
@@ -149,7 +131,7 @@ int play_again (int* currency, int game_choice) {
     else {
         strcpy (game, "Baccarat");
     }
-    printf ("\nSaldo atual: R$%d\n\nDeseja jogar %s novamente?", *currency, game);
+    printf ("\nSaldo atual: R$%d\n\nDeseja jogar %s novamente? ", *currency, game);
 
     char choice = scanf_sn();       //input escolha do player
 

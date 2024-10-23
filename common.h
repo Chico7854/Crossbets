@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 #define INVALID -1
-#define MEMORY_ERROR -2
+#define MEMORY_ERROR -2     //erro de alocacao de memoria
 
 typedef enum {      //cartas que para possuem valores diferente das faces
     A = 1,
@@ -19,10 +19,10 @@ typedef enum {      //cartas que para possuem valores diferente das faces
     K
 } SpecialCard;
 
-int multiple_choice_numbers(int min, int max);      //input para pergunta de numeros multiplos como resposta
-int scanf_num ();        //scanf para numeros
+char* trim_space(char* str);        //apaga espaços no começo e fim da string
+int scanf_num(int min, int max);      //scanf para numeros
 char scanf_sn ();       //scanf para perguntas de sim ou nao
-int scanf_bet();        //scanf para as apostas
+int scanf_bet(int* currency);        //scanf para as apostas
 int initialize_hands(int** player_hand, int** dealer_hand, int** player_card_count, int** dealer_card_count, int max_hand);     //inicializa alguns jogos com baralho
 void draw (int* hand, int* count);      //compra carta
 void print_card(int card);      //printa carta

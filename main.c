@@ -15,8 +15,10 @@ typedef enum {
     PLAYAGAIN_NAO
 } PlayAgain;
 
-int game_selection();        //simula interface de escolha de jogo
-int play_again(int* currency, int game_choice);     //verifica saldo e pergunta para player se quer continuar jogando jogo
+static int game_selection();        //simula interface de escolha de jogo
+static int play_again(int* currency, int game_choice);     //verifica saldo e pergunta para player se quer continuar jogando jogo]
+static PlayAgain start_game(int* currency, Game game_choice);      //jogar jogos até que player zere saldo ou nao queria mais jogar
+
 
 
 int main () {
@@ -36,43 +38,17 @@ int main () {
     PlayAgain game_result = PLAYAGAIN_SIM;
 
     while (game_result == PLAYAGAIN_SIM) {
+        //input tipo de jogo
         Game game_choice = game_selection();
 
-        if (game_choice == BLACKJACK) {
-            printf ("\nBem vind@ ao Blackjack da Crossbets!\n");
- 
-            while (game_result == PLAYAGAIN_SIM) {
-                if (start_blackjack(currency) == MEMORY_ERROR) {
-                    return 1;
-                }
-
-                game_result = play_again(currency, game_choice);
-            }
-        }
-        else if (game_choice == ROULETTE) {
-            printf ("\nBem Vind@ a Roleta da CrossBets!\n");
-            
-            while (game_result == PLAYAGAIN_SIM) {
-                if(start_roulette(currency) == MEMORY_ERROR) {
-                    return 1;
-                }
-
-                game_result = play_again(currency, game_choice);     
-            }
-        }
-        else if (game_choice == BACCARAT) {
-            printf ("\nBem Vind@ ao Baccarat Punto Banco da CrossBets!\n");
-            
-            while (game_result == PLAYAGAIN_SIM) {
-                if(start_baccarat(currency) == MEMORY_ERROR) {
-                    return 1;
-                }
-
-                game_result = play_again(currency, game_choice);     
-            }
+        //simulação de jogo
+        game_result = start_game(currency, game_choice);
+        if (game_result == MEMORY_ERROR) {
+            free(currency);
+            return 1;
         }
 
-        //verifica se player nao quer continuar jogando
+        //verifica se player quer continuar jogando
         if (game_result == PLAYAGAIN_NAO) {
             printf ("\nDeseja jogar outro jogo? ");
             
@@ -141,4 +117,40 @@ int play_again (int* currency, int game_choice) {
     else {      //parar de jogar o jogo
         return PLAYAGAIN_NAO;
     }
+}  
+
+//jogar jogos até que player zere saldo ou nao queria mais jogar
+static PlayAgain start_game(int* currency, Game game_choice) {
+    PlayAgain game_result = PLAYAGAIN_SIM;
+    switch (game_choice) {
+        case BLACKJACK:
+            printf ("\nBem vind@ ao Blackjack da Crossbets!\n");
+            while (game_result == PLAYAGAIN_SIM) {
+                if (start_blackjack(currency) == MEMORY_ERROR) {
+                    return MEMORY_ERROR;
+                }
+                game_result = play_again(currency, game_choice);
+            }
+            break;
+        case ROULETTE:
+            printf ("\nBem Vind@ a Roleta da CrossBets!\n");
+            while (game_result == PLAYAGAIN_SIM) {
+                if (start_roulette(currency) == MEMORY_ERROR) {
+                    return MEMORY_ERROR;
+                }
+                game_result = play_again(currency, game_choice);
+            }
+            break;
+        case BACCARAT:
+            printf ("\nBem Vind@ ao Baccarat da CrossBets!\n");
+            while (game_result == PLAYAGAIN_SIM) {
+                if (start_baccarat(currency) == MEMORY_ERROR) {
+                    return MEMORY_ERROR;
+                }
+                game_result = play_again(currency, game_choice);
+            }
+            break;
+    }
+
+    return game_result;
 }

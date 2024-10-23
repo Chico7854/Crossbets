@@ -222,6 +222,9 @@ static StartActions round_start(int* player_hand, int* player_card_count, int* d
     draw (player_hand, player_card_count);
     draw (dealer_hand, dealer_card_count);
 
+    *player_card_count = 2;
+    *dealer_card_count = 2;
+
     printf ("\n");
 
     //insurance, player pode apostar se dealer tem blackjack ou nao, custo de metade da aposta original
@@ -303,7 +306,11 @@ static StartActions round_start(int* player_hand, int* player_card_count, int* d
             
             //verifica se player tem saldo para dividir a mao
             //se nao tiver saldo
-            if (*currency - (2 * bet_value) < 0) {      
+            if (*currency - (2 * bet_value) < 0) {     
+                printf ("Mas você não tem saldo para dobrar nem dividir a mão.\n");
+            }
+            //se você tem saldo
+            else { 
                 printf ("Dividir mão? ");
 
                 player_choice_sn = scanf_sn();      //input escolha do player se divide mao
@@ -351,7 +358,7 @@ static Result dealer_turn(int* dealer_hand, int* dealer_card_count, int* currenc
     int dealer_score = hand_score (dealer_hand, dealer_card_count);     //calcula total da mao do dealer
 
     while (dealer_score < 17) {     //na vez do dealer regra diz que dealer joga até 17 pontos
-        printf ("Cartas do Dealer: ");
+        printf ("\nCartas do Dealer: ");
         print_hand(dealer_hand, dealer_card_count, dealer_score);
         
         draw (dealer_hand, dealer_card_count);
@@ -390,6 +397,8 @@ static int game_split(int* player_hand, int* player_card_count, int* dealer_hand
     }
     player_hand_split[0] = player_hand[0];      //copia carta para a segunda mao
 
+    *player_card_count = 1;
+
     //nas regras da bicycle se player dividiu mao e a carta é um A, entao ele compra apenas uma carta
     //verifica se carta é A
     if (player_hand[0] == 1) {
@@ -407,7 +416,7 @@ static int game_split(int* player_hand, int* player_card_count, int* dealer_hand
     }
     else {
         //joga a primeira mao
-        printf ("\nJogando a primeira mão:\n\n");
+        printf ("Jogando a primeira mão:\n\n");
         Result result_1 = player_draw_round(player_hand, player_card_count, dealer_hand, dealer_card_count, currency, bet_value);        //simula primeira mao
         int player_score_1 = hand_score(player_hand, player_card_count);
 
@@ -456,7 +465,7 @@ static int game_split(int* player_hand, int* player_card_count, int* dealer_hand
             //compara resultados
             //verifica se player não estourou 21 na primeira mao
             if (result_1 != PERDEU) {
-                printf ("\nComparando primeira mão:\n\n");
+                printf ("Comparando primeira mão:\n\n");
                 print_full_interface(player_hand, player_card_count, dealer_hand, dealer_card_count);
 
                 compare_scores(currency, bet_value, player_score_1, dealer_score);     //compara maos e decide vencedor
